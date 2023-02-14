@@ -8,6 +8,24 @@
   </div>
 </template>
 
+<script>
+import messaging from './initializefirebase'
+export default {
+  mounted() {
+    console.log(messaging);
+
+    messaging.onMessage((payload) => {
+    const notificationTitle = payload.notification.title;
+    const notificationOptions = {
+      body: payload.notification.body,
+      icon: payload.notification.icon,
+    };
+    new Notification(notificationTitle, notificationOptions);
+  });
+},
+}
+
+ </script>
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
