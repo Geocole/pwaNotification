@@ -12,7 +12,7 @@
 import messaging from './initializefirebase'
 export default {
   mounted() {
-    console.log(messaging);
+  
 
     messaging.onMessage((payload) => {
     const notificationTitle = payload.notification.title;

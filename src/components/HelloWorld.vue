@@ -2,6 +2,7 @@
   <div class="hello">
     <h1>{{ msg }}</h1>
     <button @click="requestPermission">Enable notification</button>
+    <button @click="disableNotification">Disable Notification</button>
     <div>
    <input type="file" @change="uploadFile"/>
     <p v-if="offline">You are offline, file will be synced once you have a connection.</p>
@@ -18,7 +19,9 @@ export default {
   },
   data() {
     return {
-      offline: false
+      offline: false,
+      notificationEnabled: false,
+      notificationDisabled: false
     }
   },
   mounted() {
@@ -31,10 +34,12 @@ export default {
       messaging.getToken().then((currentToken) => {
         if (currentToken) {
           console.log('Token: ', currentToken);
+          this.notificationEnabled = true;
         } else {
           console.log('No Instance ID token available. Request permission to generate one.');
           messaging.requestPermission().then(() => {
             console.log('Notification permission granted.');
+            this.notificationEnabled = true;
           }).catch((err) => {
             console.log('Unable to get permission to notify.', err);
           });
@@ -63,6 +68,17 @@ export default {
       } else {
         // Save the file to local storage for syncing later
         localStorage.setItem('fileToSync', JSON.stringify(formData));
+      }
+    },
+
+    async disableNotification() {
+      try {
+        await messaging.deleteToken();
+        console.log('Notification disabled');
+        this.notificationDisabled = true;
+        this.notificationEnabled = false;
+      } catch (err) {
+        console.log('Unable to disable notification.', err);
       }
     },
     async syncFiles() {

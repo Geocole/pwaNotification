@@ -15,5 +15,4 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
-//console.log(1, firebase,12 , messaging);
 export default messaging;
