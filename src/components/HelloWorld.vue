@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }} version 1</h1>
+    <h1>{{ msg }} version 2</h1>
     <button @click="requestPermission">Enable notification</button>
     <button @click="disableNotification">Disable Notification</button>
     <div>
@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import messaging from '../initializefirebase'
+import messaging from '../firebase-messaging'
 export default {
   name: 'HelloWorld',
   props: {
@@ -29,7 +29,9 @@ export default {
     window.addEventListener('online', this.checkConnection);
     window.addEventListener('offline', this.checkConnection);
   },
-  methods: {
+  
+   methods: {
+
     requestPermission() {
       messaging.getToken().then((currentToken) => {
         if (currentToken) {
@@ -48,6 +50,7 @@ export default {
         console.log('An error occurred while retrieving token. ', err);
       });
     },
+
     checkConnection() {
       this.offline = !navigator.onLine;
       if (!this.offline) {

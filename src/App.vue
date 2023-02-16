@@ -9,21 +9,6 @@
 </template>
 
 <script>
-import messaging from './initializefirebase'
-export default {
-  mounted() {
-  
-
-    messaging.onMessage((payload) => {
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-      body: payload.notification.body,
-      icon: payload.notification.icon,
-    };
-    new Notification(notificationTitle, notificationOptions);
-  });
-},
-}
 
  </script>
 <style>
