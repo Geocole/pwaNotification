@@ -2,7 +2,10 @@
   <div class="hello">
     <h1>{{ msg }} version 2</h1>
     <button @click="requestPermission">Enable notification</button>
+  
     <button @click="disableNotification">Disable Notification</button>
+    <br><br>
+    <button @click="sendNotification">Send notification</button>
     <div>
    <input type="file" @change="uploadFile"/>
     <p v-if="offline">You are offline, file will be synced once you have a connection.</p>
@@ -11,7 +14,8 @@
 </template>
 
 <script>
-import messaging from '../firebase-messaging'
+import messaging from '../firebase-messaging';
+import axios from 'axios';
 export default {
   name: 'HelloWorld',
   props: {
@@ -21,7 +25,8 @@ export default {
     return {
       offline: false,
       notificationEnabled: false,
-      notificationDisabled: false
+      notificationDisabled: false,
+      token:""
     }
   },
   mounted() {
@@ -97,6 +102,37 @@ export default {
           console.error(error);
         }
       }
+    },
+      sendNotification() {
+      messaging.getToken().then(async (currentToken) => {
+        console.log(currentToken);
+        if (currentToken) {
+          try {
+        const response = await axios.post('https://fcm.googleapis.com/fcm/send', {
+          to: currentToken,
+          notification: {
+            title: 'New Notification',
+            body: 'Hello, this is a test notification.'
+          }
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            //'Authorization':'BBMDwG79kjww-AMiZaBoeUbSwS7A66hImObsSX0WwKsPMsalw62xvtlAn-xZwPSgcVrU0VcWf23DRI5DH131wW0'
+            'Authorization': 'key=AAAAWbC2thA:APA91bGG_by2uabF8szRAEBaZyG4DZZf3T92r_C2leVBEe9azh5rL-rzIk3hE0vzoGfx-I--icEkyssG3xS9k7B-2J8pCPLRPtWhJssbiJTSb2rF7K1hOd4UAuTgubxmC-a77Raeade9'
+          }
+        })
+        console.log(response.data)
+      } catch (error) {
+        console.error(error)
+      }
+        } else {
+          console.log('No Instance ID token available. Enable your notification.');
+            this.notificationEnabled = false;
+        }
+      }).catch((err) => {
+        console.log('An error occurred while retrieving token. ', err);
+      });
+      
     }
     
   },
