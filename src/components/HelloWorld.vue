@@ -7,7 +7,7 @@
     <br><br>
     <button @click="sendNotification">Send notification</button>
     <div>
-   <input type="file" @change="uploadFile"/>
+   <input type="file" @change="uploadFiles"/>
     <p v-if="offline">You are offline, file will be synced once you have a connection.</p>
     </div>
   </div>
@@ -16,6 +16,7 @@
 <script>
 import messaging from '../firebase-messaging';
 import axios from 'axios';
+import s3 from '../plugins/AWS'
 export default {
   name: 'HelloWorld',
   props: {
@@ -60,23 +61,63 @@ export default {
       this.offline = !navigator.onLine;
       if (!this.offline) {
         this.syncFiles();
+        console.log('is connected');
       }
     },
-    async uploadFile(event) {
-      const file = event.target.files[0];
-      const formData = new FormData();
-      formData.append('file', file);
+    async uploadFiles(event) {
+      const files = event.target.files;
       if (!this.offline) {
         try {
-         // const response = await axios.post('/api/files', formData);
-          console.log(1);
+          //const formData = new FormData();
+          for (let i = 0; i < files.length; i++) {
+            console.log(i);
+            //formData.append('file', files[i]);
+            const file = files[i];
+        const s3Params = {
+          Bucket: 'notifpwaprojectfile',
+          Key: file.name,
+          Body: file
+        };
+
+        s3.putObject(s3Params, (err, data) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log(`File uploaded successfully. File location: ${data.Location}`);
+          }
+        });
+          }
+          //const response = await axios.post('/api/files', formData);
+          //console.log(response);
         } catch (error) {
           console.error(error);
         }
       } else {
-        // Save the file to local storage for syncing later
-        localStorage.setItem('fileToSync', JSON.stringify(formData));
-      }
+      //   // Save the files to local storage for syncing later
+      //   localStorage.setItem('filesToSync', JSON.stringify(Array.from(files)));
+         
+     
+
+      // const currentFiles = JSON.parse(localStorage.getItem('filesToUpload')) || [];
+      // localStorage.setItem('filesToUpload', JSON.stringify([...currentFiles, ...filesToUpload]));
+
+      for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const reader = new FileReader();
+
+          reader.onload = () => {
+            const fileContent = reader.result;
+            const fileName = file.name;
+
+            // Store the file in local storage
+            localStorage.setItem(fileName, fileContent);
+            console.log(localStorage.getItem(fileName, fileContent));
+          }
+
+          reader.readAsDataURL(file);
+        }
+     // console.log('Synchronisation', files, filesToUpload, JSON.stringify([...currentFiles, ...filesToUpload]), JSON.parse(localStorage.getItem('filesToUpload')) );
+       }
     },
 
     async disableNotification() {
@@ -90,18 +131,31 @@ export default {
       }
     },
     async syncFiles() {
-      // Check if there is a file in local storage to sync
-      const fileToSync = localStorage.getItem('fileToSync');
-      if (fileToSync) {
-        try {
-          const formData = JSON.parse(fileToSync);
-          //const response = await axios.post('/api/files', formData);
-          console.log(formData);
-          localStorage.removeItem('fileToSync');
-        } catch (error) {
-          console.error(error);
-        }
-      }
+      const keys = Object.keys(localStorage);
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        const fileContent = localStorage.getItem(key);
+
+        const s3Params = {
+          Bucket: 'notifpwaprojectfile',
+          Key: key,
+          Body: fileContent
+        };
+
+        s3.putObject(s3Params, (err, data) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log(`File uploaded successfully. File location: ${data.Location}`);
+          }
+        });
+
+        // Remove file from local storage
+        localStorage.removeItem(key);
+
+          }
+          
+
     },
       sendNotification() {
       messaging.getToken().then(async (currentToken) => {
@@ -110,14 +164,14 @@ export default {
           try {
         const response = await axios.post('https://fcm.googleapis.com/fcm/send', {
           to: currentToken,
+          priority: "high",
           notification: {
             title: 'New Notification',
-            body: 'Hello, this is a test notification.'
+            body: 'Hello, this is a test notification11111111111111111111111111.'
           }
         }, {
           headers: {
             'Content-Type': 'application/json',
-            //'Authorization':'BBMDwG79kjww-AMiZaBoeUbSwS7A66hImObsSX0WwKsPMsalw62xvtlAn-xZwPSgcVrU0VcWf23DRI5DH131wW0'
             'Authorization': 'key=AAAAWbC2thA:APA91bGG_by2uabF8szRAEBaZyG4DZZf3T92r_C2leVBEe9azh5rL-rzIk3hE0vzoGfx-I--icEkyssG3xS9k7B-2J8pCPLRPtWhJssbiJTSb2rF7K1hOd4UAuTgubxmC-a77Raeade9'
           }
         })
