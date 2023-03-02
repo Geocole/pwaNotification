@@ -1,9 +1,9 @@
 import AWS from 'aws-sdk'
-
+console.log(33, process.env.VUE_APP_S3_ACCESSKEYID, process.env.BASE_URL, process.env.NODE_ENV);
 AWS.config.update({
-    accessKeyId: 'AKIAVQUGSRGQP76GM4FM',
-    secretAccessKey: '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',
-    region: 'us-east-2'
+    accessKeyId: process.env.VUE_APP_S3_ACCESSKEYID,
+    secretAccessKey: process.env.VUE_APP_S3_SECRETACCESSKEY,
+    region: process.env.VUE_APP_REGION
   })
   // {
   //   // region: '<YOUR-S3-REGION>',
