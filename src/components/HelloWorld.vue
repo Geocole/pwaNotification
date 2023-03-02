@@ -87,19 +87,13 @@ export default {
           }
         });
           }
-          //const response = await axios.post('/api/files', formData);
-          //console.log(response);
+         
         } catch (error) {
           console.error(error);
         }
       } else {
-      //   // Save the files to local storage for syncing later
-      //   localStorage.setItem('filesToSync', JSON.stringify(Array.from(files)));
-         
      
-
-      // const currentFiles = JSON.parse(localStorage.getItem('filesToUpload')) || [];
-      // localStorage.setItem('filesToUpload', JSON.stringify([...currentFiles, ...filesToUpload]));
+     
 
       for (let i = 0; i < files.length; i++) {
           const file = files[i];
@@ -111,7 +105,7 @@ export default {
 
             // Store the file in local storage
             localStorage.setItem(fileName, fileContent);
-            console.log(localStorage.getItem(fileName, fileContent));
+            //console.log(localStorage.getItem(fileName, fileContent));
           }
 
           reader.readAsDataURL(file);
@@ -159,7 +153,6 @@ export default {
     },
       sendNotification() {
       messaging.getToken().then(async (currentToken) => {
-        console.log(currentToken);
         if (currentToken) {
           try {
         const response = await axios.post('https://fcm.googleapis.com/fcm/send', {
