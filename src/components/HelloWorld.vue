@@ -16,7 +16,7 @@
 <script>
 import messaging from '../firebase-messaging';
 import axios from 'axios';
-import s3 from '../plugins/AWS'
+import AXIOS from '../plugins/axios';
 export default {
   name: 'HelloWorld',
   props: {
@@ -68,38 +68,18 @@ export default {
       const files = event.target.files;
       if (!this.offline) {
         try {
-          //const formData = new FormData();
+          const formData = new FormData();
           for (let i = 0; i < files.length; i++) {
             console.log(i);
-            //formData.append('file', files[i]);
-            const file = files[i];
-        const s3Params = {
-          Bucket: 'notifpwaprojectfile',
-          Key: file.name,
-          Body: file
-        };
+            formData.append(files[i].name, files[i]);
 
-        s3.putObject(s3Params, (err, data) => {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log(`File uploaded successfully. File location: ${data.Location}`);
           }
-        });
-          }
-          //const response = await axios.post('/api/files', formData);
-          //console.log(response);
+          const response = await AXIOS.post('https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php', formData);
+          console.log(response);
         } catch (error) {
           console.error(error);
         }
       } else {
-      //   // Save the files to local storage for syncing later
-      //   localStorage.setItem('filesToSync', JSON.stringify(Array.from(files)));
-         
-     
-
-      // const currentFiles = JSON.parse(localStorage.getItem('filesToUpload')) || [];
-      // localStorage.setItem('filesToUpload', JSON.stringify([...currentFiles, ...filesToUpload]));
 
       for (let i = 0; i < files.length; i++) {
           const file = files[i];
@@ -116,8 +96,7 @@ export default {
 
           reader.readAsDataURL(file);
         }
-     // console.log('Synchronisation', files, filesToUpload, JSON.stringify([...currentFiles, ...filesToUpload]), JSON.parse(localStorage.getItem('filesToUpload')) );
-       }
+      }
     },
 
     async disableNotification() {
@@ -132,24 +111,14 @@ export default {
     },
     async syncFiles() {
       const keys = Object.keys(localStorage);
-      for (let i = 0; i < keys.length; i++) {
+      const formData = new FormData();
+      for (let i = 0; i < keys.length; i++) {// console.log('Synchronisation', files, filesToUpload, JSON.stringify([...currentFiles, ...filesToUpload]), JSON.parse(localStorage.getItem('filesToUpload')) );
+      
         const key = keys[i];
         const fileContent = localStorage.getItem(key);
-
-        const s3Params = {
-          Bucket: 'notifpwaprojectfile',
-          Key: key,
-          Body: fileContent
-        };
-
-        s3.putObject(s3Params, (err, data) => {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log(`File uploaded successfully. File location: ${data.Location}`);
-          }
-        });
-
+        formData.append(keys[i], fileContent );
+        const response = await AXIOS.post('https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php', formData);
+        console.log(response);
         // Remove file from local storage
         localStorage.removeItem(key);
 
