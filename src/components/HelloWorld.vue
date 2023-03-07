@@ -1,6 +1,15 @@
 <template>
   <div class="hello max-w-md">
     <h1>{{ msg }} version 4</h1>
+    <div v-if="permissionToken" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-gris-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
+  <span class="font-medium">Device token</span> {{ token }}
+</div>
+    <div v-if="desableNotif" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
+  <span class="font-medium">Success alert!</span> Notification disabled.
+</div>
+<div v-if="notif" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
+  <span class="font-medium">Success alert!</span> The notification is sended.
+</div>
     <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
       @click="requestPermission"
     >
@@ -9,6 +18,7 @@
    
     <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
       @click="disableNotification"
+      disabled
     >
     Disable Notification
     </button>
@@ -32,7 +42,15 @@
             file:bg-gradient-to-r file:from-blue-600 file:to-amber-600
             hover:file:cursor-pointer hover:file:opacity-80
           " />
-<div class="max-w-md mx-auto ..." v-if="offline" role="alert">
+
+          <div class="flex flex-wrap mt-4">
+      <div v-for="(image, index) in images" :key="index" class="w-1/2 px-2 py-2">
+        <img :src="image" class="w-full">
+      </div>
+    </div>
+
+
+          <div class="max-w-md mx-auto ..." v-if="offline" role="alert">
   <div class="bg-red-500 text-white font-bold rounded-t px-4 py-2">
     Attention
   </div>
@@ -46,7 +64,7 @@
 
 <script>
 import messaging from '../firebase-messaging';
-import axios from 'axios';
+//import axios from 'axios';
 import s3 from '../plugins/AWS'
 export default {
   name: 'HelloWorld',
@@ -59,7 +77,11 @@ export default {
       notificationEnabled: false,
       notificationDisabled: false,
       token:"",
-      send:false
+      send:false,
+      images:[],
+      desableNotif:false,
+      notif:false,
+      permissionToken:false,
     }
   },
   mounted() {
@@ -74,6 +96,11 @@ export default {
       messaging.getToken().then((currentToken) => {
         if (currentToken) {
           console.log('Token: ', currentToken);
+          this.token= currentToken;
+          this.permissionToken=true;
+          setTimeout(() => {
+            this.permissionToken=false;
+                     }, 9000);
           this.notificationEnabled = true;
         } else {
           console.log('No Instance ID token available. Request permission to generate one.');
@@ -102,7 +129,11 @@ export default {
         try {
           //const formData = new FormData();
           for (let i = 0; i < files.length; i++) {
-            console.log(i);
+            const reader = new FileReader()
+        reader.onload = (e) => {
+          this.images.push(e.target.result)
+        }
+        reader.readAsDataURL(files[i])
             //formData.append('file', files[i]);
             const file = files[i];
         const s3Params = {
@@ -115,15 +146,17 @@ export default {
           if (err) {
             console.log(err);
           } else {
-            this.$refs.fileupload.value = null;
             this.send=true;
             console.log(`File uploaded successfully. File location: ${data.Location}`);
-            setTimeout(() => {
-              this.send=false;
-                     }, 30000);
           }
         });
           }
+          this.$refs.fileupload.value = null;
+          this.images=[];
+            setTimeout(() => {
+              this.send=false;
+                     }, 30000);
+                    
          
         } catch (error) {
           console.error(error);
@@ -150,7 +183,7 @@ export default {
         this.send=true;
             setTimeout(() => {
               this.send=false;
-                     }, 30000);
+                     }, 10000);
      // console.log('Synchronisation', files, filesToUpload, JSON.stringify([...currentFiles, ...filesToUpload]), JSON.parse(localStorage.getItem('filesToUpload')) );
        }
     },
@@ -159,8 +192,12 @@ export default {
       try {
         await messaging.deleteToken();
         console.log('Notification disabled');
+        this.desableNotif=true;
         this.notificationDisabled = true;
         this.notificationEnabled = false;
+        setTimeout(() => {
+              this.desableNotif=false;
+                     }, 9000);
       } catch (err) {
         console.log('Unable to disable notification.', err);
       }
@@ -189,6 +226,7 @@ export default {
         localStorage.removeItem(key);
 
           }
+          this.$refs.fileupload.value = null;
           
 
     },
@@ -196,24 +234,67 @@ export default {
       messaging.getToken().then(async (currentToken) => {
         if (currentToken) {
           console.log(currentToken);
-          try {
-        const response = await axios.post('https://fcm.googleapis.com/fcm/send', {
-          to: currentToken,
-          priority: "high",
-          notification: {
-            title: 'New Notification',
-            body: 'Hello, this is a test notification11111111111111111111111111.'
-          }
-        }, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'key=AAAAWbC2thA:APA91bGG_by2uabF8szRAEBaZyG4DZZf3T92r_C2leVBEe9azh5rL-rzIk3hE0vzoGfx-I--icEkyssG3xS9k7B-2J8pCPLRPtWhJssbiJTSb2rF7K1hOd4UAuTgubxmC-a77Raeade9'
-          }
-        })
-        console.log(response.data)
-      } catch (error) {
-        console.error(error)
-      }
+      //     try {
+      //   const response = await axios.post('https://fcm.googleapis.com/fcm/send', {
+      //     to: currentToken,
+      //     priority: "high",
+      //     notification: {
+      //       title: 'New Notification',
+      //       body: 'Hello, this is a test notification11111111111111111111111111.'
+      //     }
+      //   }, {
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       'Authorization': 'key=AAAAWbC2thA:APA91bGG_by2uabF8szRAEBaZyG4DZZf3T92r_C2leVBEe9azh5rL-rzIk3hE0vzoGfx-I--icEkyssG3xS9k7B-2J8pCPLRPtWhJssbiJTSb2rF7K1hOd4UAuTgubxmC-a77Raeade9'
+      //     }
+      //   })
+      //   console.log(response.data)
+      //   this.notif=true;
+      //   setTimeout(() => {
+      //         this.notif=false;
+      //                }, 9000);
+      // } catch (error) {
+      //   console.error(error)
+      // }
+
+
+      const url = 'https://fcm.googleapis.com/fcm/send';
+const options = {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'key=AAAAWbC2thA:APA91bGG_by2uabF8szRAEBaZyG4DZZf3T92r_C2leVBEe9azh5rL-rzIk3hE0vzoGfx-I--icEkyssG3xS9k7B-2J8pCPLRPtWhJssbiJTSb2rF7K1hOd4UAuTgubxmC-a77Raeade9'
+  },
+  body: JSON.stringify({
+    to: 'e1fdSm2kkcVKTo5RW4ewBo:APA91bE6ueQ3fxXtYKfLM-gzFI7jO97l6cDJ9_CoE6qusBjXRSfvuePkITMWbKL-ceEo4tZBgXhZhTuvNlnm7q7e9XOEueAwm6y1AOHVepcplqV7V07mlAXsIUhOr02hz_pF9hqp31G5',
+    priority: 'high',
+    notification: {
+      title: 'New Notification',
+      body: 'Hello, this is a test notification.'
+    }
+  })
+};
+
+fetch(url, options)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log(data);
+       this.notif=true;
+        setTimeout(() => {
+              this.notif=false;
+                     }, 9000);
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);  this.notif=true;
+        setTimeout(() => {
+              this.notif=false;
+                     }, 9000);
+  });
         } else {
           console.log('No Instance ID token available. Enable your notification.');
             this.notificationEnabled = false;
