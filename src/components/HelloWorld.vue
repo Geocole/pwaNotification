@@ -123,6 +123,9 @@ export default {
         console.log('is connected');
       }
     },
+    clearArray() {
+      this.$set(this, 'images', []);
+    },
     async uploadFiles(event) {
       const files = event.target.files;
       if (!this.offline) {
@@ -152,10 +155,13 @@ export default {
         });
           }
           this.$refs.fileupload.value = null;
-          this.images=[];
+
+          console.log(this.images);
             setTimeout(() => {
               this.send=false;
-                     }, 30000);
+              window.location.reload();
+                     }, 6000);
+                    
                     
          
         } catch (error) {
@@ -177,6 +183,7 @@ export default {
             localStorage.setItem(fileName, fileContent);
             //console.log(localStorage.getItem(fileName, fileContent));
           }
+         
 
           reader.readAsDataURL(file);
         }
@@ -184,6 +191,7 @@ export default {
             setTimeout(() => {
               this.send=false;
                      }, 10000);
+                     this.images.length=0;
      // console.log('Synchronisation', files, filesToUpload, JSON.stringify([...currentFiles, ...filesToUpload]), JSON.parse(localStorage.getItem('filesToUpload')) );
        }
     },
