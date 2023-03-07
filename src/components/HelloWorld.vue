@@ -10,13 +10,13 @@
 <div v-if="notif" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
   <span class="font-medium">Success alert!</span> The notification is sended.
 </div>
-    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
+    <button v-if="false" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
       @click="requestPermission"
     >
     Enable notification
     </button>
    
-    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
+    <button v-if="false" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
       @click="disableNotification"
       disabled
     >
@@ -25,7 +25,7 @@
 
     <br><br>
     
-    <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full"
+    <button v-if="false" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full"
       @click="sendNotification"
     >
     Send notification
