@@ -1,14 +1,45 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }} version 2</h1>
-    <button @click="requestPermission">Enable notification</button>
-  
-    <button @click="disableNotification">Disable Notification</button>
+  <div class="hello max-w-md">
+    <h1>{{ msg }} version 4</h1>
+    <button v-if="false" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
+      @click="requestPermission"
+    >
+    Enable notification
+    </button>
+   
+    <button v-if="false" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
+      @click="disableNotification"
+    >
+    Disable Notification
+    </button>
+
     <br><br>
-    <button @click="sendNotification">Send notification</button>
+    
+    <button v-if="false" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full"
+      @click="sendNotification"
+    >
+    Send notification
+    </button>
     <div>
-   <input type="file" @change="uploadFiles"/>
-    <p v-if="offline">You are offline, file will be synced once you have a connection.</p>
+      <div v-if="send" class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
+  <span class="font-medium">Success alert!</span> File uploaded successfully.
+</div>
+<label class="block my-5 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload file</label>   
+<input @change="uploadFiles" ref="fileupload" type="file" class="text-sm text-grey-500
+            file:mr-5 file:py-3 file:px-10
+            file:rounded-full file:border-0
+            file:text-md file:font-semibold  file:text-white
+            file:bg-gradient-to-r file:from-blue-600 file:to-amber-600
+            hover:file:cursor-pointer hover:file:opacity-80
+          " />
+<div class="max-w-md mx-auto ..." v-if="offline" role="alert">
+  <div class="bg-red-500 text-white font-bold rounded-t px-4 py-2">
+    Attention
+  </div>
+  <div class="border border-t-0 border-red-400 rounded-b bg-red-100 px-4 py-3 text-red-700">
+    <p>You are offline, file will be synced once you have a connection.</p>
+  </div>
+</div>
     </div>
   </div>
 </template>
@@ -27,7 +58,8 @@ export default {
       offline: false,
       notificationEnabled: false,
       notificationDisabled: false,
-      token:""
+      token:"",
+      send:false
     }
   },
   mounted() {
@@ -70,14 +102,20 @@ export default {
         try {
           const formData = new FormData();
           for (let i = 0; i < files.length; i++) {
-            console.log(i);
             formData.append(files[i].name, files[i]);
 
           }
           const response = await AXIOS.post('https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php', formData);
           console.log(response);
+          this.$refs.fileupload.value = null;
+            this.send=true;
+            console.log('File uploaded successfully. File');
+          setTimeout(() => {
+            this.send=false;
+}, "9000");
+
         } catch (error) {
-          console.error(error);
+          console.error(1, error);
         }
       } else {
 
@@ -96,6 +134,12 @@ export default {
 
           reader.readAsDataURL(file);
         }
+        this.$refs.fileupload.value = null;
+            this.send=true;
+            console.log('File uploaded successfully. File');
+          setTimeout(() => {
+            this.send=false;
+}, "9000");
       }
     },
 
