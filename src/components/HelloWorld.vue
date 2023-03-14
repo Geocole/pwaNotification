@@ -1,15 +1,6 @@
 <template>
   <div class="hello max-w-md">
     <h1>{{ msg }} version 4</h1>
-    <div v-if="permissionToken" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-gris-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
-  <span class="font-medium">Device token</span> {{ token }}
-</div>
-    <div v-if="desableNotif" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
-  <span class="font-medium">Success alert!</span> Notification disabled.
-</div>
-<div v-if="notif" class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
-  <span class="font-medium">Success alert!</span> The notification is sended.
-</div>
     <button v-if="false" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
       @click="requestPermission"
     >
@@ -18,7 +9,6 @@
    
     <button v-if="false" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
       @click="disableNotification"
-      disabled
     >
     Disable Notification
     </button>
@@ -48,9 +38,7 @@
         <img :src="image" class="w-full">
       </div>
     </div>
-
-
-          <div class="max-w-md mx-auto ..." v-if="offline" role="alert">
+<div class="max-w-md mx-auto ..." v-if="offline" role="alert">
   <div class="bg-red-500 text-white font-bold rounded-t px-4 py-2">
     Attention
   </div>
@@ -64,8 +52,8 @@
 
 <script>
 import messaging from '../firebase-messaging';
-//import axios from 'axios';
-import s3 from '../plugins/AWS'
+import axios from 'axios';
+//import AXIOS from '../plugins/axios';
 export default {
   name: 'HelloWorld',
   props: {
@@ -78,10 +66,7 @@ export default {
       notificationDisabled: false,
       token:"",
       send:false,
-      images:[],
-      desableNotif:false,
-      notif:false,
-      permissionToken:false,
+      images:[]
     }
   },
   mounted() {
@@ -127,49 +112,74 @@ export default {
       this.$set(this, 'images', []);
     },
     async uploadFiles(event) {
-      const files = event.target.files;
+
+       const files = event.target.files;
       if (!this.offline) {
         try {
-          //const formData = new FormData();
+          const formData = new FormData();
           for (let i = 0; i < files.length; i++) {
-            const reader = new FileReader()
-        reader.onload = (e) => {
-          this.images.push(e.target.result)
+            const reader = new FileReader();
+            let rawImg;
+         reader.onload = async(e) => {
+          this.images.push(e.target.result);
+          rawImg =  reader.result;
+            
         }
-        reader.readAsDataURL(files[i])
-            //formData.append('file', files[i]);
-            const file = files[i];
-        const s3Params = {
-          Bucket: 'notifpwaprojectfile',
-          Key: file.name,
-          Body: file
-        };
+         setTimeout(() => {
+          formData.append("fichier", rawImg);
+          formData.append("name", files[i].name);
+}, "2000");
+          
+           
+        reader.readAsDataURL(files[i]);
+           
+          
+          }
+          
 
-        s3.putObject(s3Params, (err, data) => {
-          if (err) {
-            console.log(err);
-          } else {
+setTimeout(() => {
+              const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
+const options = {
+  method: 'POST',
+  headers: {
+    //'Content-Type': 'multipart/form-data',
+    },
+  body: formData
+};
+
+fetch(url, options)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response;
+  })
+  .then(data => {
+    console.log(data);
+    this.$refs.fileupload.value = null;
             this.send=true;
-            console.log(`File uploaded successfully. File location: ${data.Location}`);
-          }
-        });
-          }
-          this.$refs.fileupload.value = null;
-
-          console.log(this.images);
-            setTimeout(() => {
+            console.log(11, 'File uploaded successfully. File');
+          setTimeout(() => {
+            this.send=false;
+}, "5000");
+setTimeout(() => {
               this.send=false;
-              window.location.reload();
+              this.images=[];
+             // window.location.reload();
                      }, 6000);
-                    
-                    
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);  
+  });    
+}, "3000");
+
          
         } catch (error) {
-          console.error(error);
+          this.images=[];
+          this.$refs.fileupload.value = null;
+          console.error(1, error.response);
         }
       } else {
-     
-     
 
       for (let i = 0; i < files.length; i++) {
           const file = files[i];
@@ -187,13 +197,14 @@ export default {
 
           reader.readAsDataURL(file);
         }
-        this.send=true;
-            setTimeout(() => {
-              this.send=false;
-                     }, 10000);
-                     this.images.length=0;
-     // console.log('Synchronisation', files, filesToUpload, JSON.stringify([...currentFiles, ...filesToUpload]), JSON.parse(localStorage.getItem('filesToUpload')) );
-       }
+        this.$refs.fileupload.value = null;
+            this.send=true;
+            console.log(12, 'File uploaded successfully. File');
+          setTimeout(() => {
+            this.send=false;
+            this.images=[];
+}, "5000");
+      }
     },
 
     async disableNotification() {
@@ -210,33 +221,58 @@ export default {
         console.log('Unable to disable notification.', err);
       }
     },
+
+
     async syncFiles() {
       const keys = Object.keys(localStorage);
+      if(keys.length != 0){
+      const formData = new FormData();
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
         const fileContent = localStorage.getItem(key);
-
-        const s3Params = {
-          Bucket: 'notifpwaprojectfile',
-          Key: key,
-          Body: fileContent
-        };
-
-        s3.putObject(s3Params, (err, data) => {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log(`File uploaded successfully. File location: ${data.Location}`);
-          }
-        });
-
-        // Remove file from local storage
+        formData.append("fichier", fileContent);
+        formData.append("name", keys[i]);
+      
         localStorage.removeItem(key);
 
           }
-          this.$refs.fileupload.value = null;
-          
+          const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
+         
+const options = {
+  method: 'POST',
+  headers: {
+   // 'Content-Type': 'multipart/form-data',
+    },
+  body: formData
+};
 
+fetch(url, options)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response;
+  })
+  .then(data => {
+    console.log(data);
+    this.$refs.fileupload.value = null;
+            this.send=true;
+            console.log(13, 'File uploaded successfully.');
+          setTimeout(() => {
+            this.send=false;
+}, "5000");
+setTimeout(() => {
+              this.send=false;
+              this.images=[];
+             // window.location.reload();
+                     }, 6000);
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);  
+  });
+
+          
+    }
     },
       sendNotification() {
       messaging.getToken().then(async (currentToken) => {
