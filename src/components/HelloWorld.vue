@@ -52,7 +52,7 @@
 
 <script>
 import messaging from '../firebase-messaging';
-import axios from 'axios';
+//import axios from 'axios';
 //import AXIOS from '../plugins/axios';
 export default {
   name: 'HelloWorld',
