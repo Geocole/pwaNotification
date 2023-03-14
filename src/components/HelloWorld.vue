@@ -32,6 +32,12 @@
             file:bg-gradient-to-r file:from-blue-600 file:to-amber-600
             hover:file:cursor-pointer hover:file:opacity-80
           " />
+
+          <div class="flex flex-wrap mt-4">
+      <div v-for="(image, index) in images" :key="index" class="w-1/2 px-2 py-2">
+        <img :src="image" class="w-full">
+      </div>
+    </div>
 <div class="max-w-md mx-auto ..." v-if="offline" role="alert">
   <div class="bg-red-500 text-white font-bold rounded-t px-4 py-2">
     Attention
@@ -47,7 +53,7 @@
 <script>
 import messaging from '../firebase-messaging';
 import axios from 'axios';
-import AXIOS from '../plugins/axios';
+//import AXIOS from '../plugins/axios';
 export default {
   name: 'HelloWorld',
   props: {
@@ -59,7 +65,8 @@ export default {
       notificationEnabled: false,
       notificationDisabled: false,
       token:"",
-      send:false
+      send:false,
+      images:[]
     }
   },
   mounted() {
@@ -97,25 +104,72 @@ export default {
       }
     },
     async uploadFiles(event) {
-      const files = event.target.files;
+
+       const files = event.target.files;
       if (!this.offline) {
         try {
           const formData = new FormData();
           for (let i = 0; i < files.length; i++) {
-            formData.append(files[i].name, files[i]);
-
+            const reader = new FileReader();
+            let rawImg;
+         reader.onload = async(e) => {
+          this.images.push(e.target.result);
+          rawImg =  reader.result;
+            
+        }
+         setTimeout(() => {
+          formData.append("fichier", rawImg);
+          formData.append("name", files[i].name);
+}, "2000");
+          
+           
+        reader.readAsDataURL(files[i]);
+           
+          
           }
-          const response = await AXIOS.post('https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php', formData);
-          console.log(response);
-          this.$refs.fileupload.value = null;
+          
+
+setTimeout(() => {
+              const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
+const options = {
+  method: 'POST',
+  headers: {
+    //'Content-Type': 'multipart/form-data',
+    },
+  body: formData
+};
+
+fetch(url, options)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response;
+  })
+  .then(data => {
+    console.log(data);
+    this.$refs.fileupload.value = null;
             this.send=true;
-            console.log('File uploaded successfully. File');
+            console.log(11, 'File uploaded successfully. File');
           setTimeout(() => {
             this.send=false;
-}, "9000");
+}, "5000");
+setTimeout(() => {
+              this.send=false;
+              this.images=[];
+             // window.location.reload();
+                     }, 6000);
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);  
+  });    
+}, "3000");
 
+         
         } catch (error) {
-          console.error(1, error);
+          this.images=[];
+          this.$refs.fileupload.value = null;
+          console.error(1, error.response);
         }
       } else {
 
@@ -136,10 +190,11 @@ export default {
         }
         this.$refs.fileupload.value = null;
             this.send=true;
-            console.log('File uploaded successfully. File');
+            console.log(12, 'File uploaded successfully. File');
           setTimeout(() => {
             this.send=false;
-}, "9000");
+            this.images=[];
+}, "5000");
       }
     },
 
@@ -153,22 +208,58 @@ export default {
         console.log('Unable to disable notification.', err);
       }
     },
+
+
     async syncFiles() {
       const keys = Object.keys(localStorage);
+      if(keys.length != 0){
       const formData = new FormData();
-      for (let i = 0; i < keys.length; i++) {// console.log('Synchronisation', files, filesToUpload, JSON.stringify([...currentFiles, ...filesToUpload]), JSON.parse(localStorage.getItem('filesToUpload')) );
-      
+      for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
         const fileContent = localStorage.getItem(key);
-        formData.append(keys[i], fileContent );
-        const response = await AXIOS.post('https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php', formData);
-        console.log(response);
-        // Remove file from local storage
+        formData.append("fichier", fileContent);
+        formData.append("name", keys[i]);
+      
         localStorage.removeItem(key);
 
           }
-          
+          const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
+         
+const options = {
+  method: 'POST',
+  headers: {
+   // 'Content-Type': 'multipart/form-data',
+    },
+  body: formData
+};
 
+fetch(url, options)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response;
+  })
+  .then(data => {
+    console.log(data);
+    this.$refs.fileupload.value = null;
+            this.send=true;
+            console.log(13, 'File uploaded successfully.');
+          setTimeout(() => {
+            this.send=false;
+}, "5000");
+setTimeout(() => {
+              this.send=false;
+              this.images=[];
+             // window.location.reload();
+                     }, 6000);
+  })
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);  
+  });
+
+          
+    }
     },
       sendNotification() {
       messaging.getToken().then(async (currentToken) => {
