@@ -102,19 +102,55 @@ export default {
     },
 
     checkConnection() {
-      this.offline = !navigator.onLine;
-      if (!this.offline) {
+      if (navigator.connection) {
+  // use navigator.connection
+  this.offline = !navigator.onLine;
+      const connectionType = navigator.connection.effectiveType;
+      
+       const isSlowConnection = connectionType === 'slow-2g' || connectionType === '2g';
+      console.log(navigator, connectionType);
+      if (!this.offline && !isSlowConnection) {
         this.syncFiles();
         console.log('is connected');
+      }else {
+        console.log('is not connected');
       }
+} else {
+  // handle the case where navigator.connection is undefined
+  this.offline = !navigator.onLine;
+     
+      if (!this.offline ) {
+        this.syncFiles();
+        console.log('is connected');
+      }else {
+        console.log('is not connected');
+      }
+}
+     
     },
+
     clearArray() {
       this.$set(this, 'images', []);
     },
-    async uploadFiles(event) {
 
+    async uploadFiles(event) {
+      let connectionType ='';
+      let isSlowConnection=false;
+      let connexion = false;
+      if (navigator.connection) {
+  // use navigator.connection
+   connectionType = navigator.connection.effectiveType;
+        isSlowConnection = connectionType === 'slow-2g' || connectionType === '2g';
+        connexion=(!this.offline)&&(!isSlowConnection);
+
+} else {
+  // handle the case where navigator.connection is undefined
+  connexion=!this.offline;
+}
        const files = event.target.files;
-      if (!this.offline) {
+      
+
+      if (connexion) {
         try {
           const formData = new FormData();
           for (let i = 0; i < files.length; i++) {
@@ -191,17 +227,17 @@ setTimeout(() => {
 
             // Store the file in local storage
             localStorage.setItem(fileName, fileContent);
-            //console.log(localStorage.getItem(fileName, fileContent));
+            console.log(localStorage.getItem(fileName));
           }
          
 
           reader.readAsDataURL(file);
         }
-        this.$refs.fileupload.value = null;
-            this.send=true;
+        
+            
             console.log(12, 'File uploaded successfully. File');
           setTimeout(() => {
-            this.send=false;
+            
             this.images=[];
 }, "5000");
       }
@@ -230,6 +266,7 @@ setTimeout(() => {
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
         const fileContent = localStorage.getItem(key);
+        console.log(fileContent);
         formData.append("fichier", fileContent);
         formData.append("name", keys[i]);
       
@@ -246,7 +283,8 @@ const options = {
   body: formData
 };
 
-fetch(url, options)
+setTimeout(() => {
+  fetch(url, options)
   .then(response => {
     if (!response.ok) {
       throw new Error('Network response was not ok');
@@ -270,6 +308,8 @@ setTimeout(() => {
   .catch(error => {
     console.error('There was a problem with the fetch operation:', error);  
   });
+}, "2000");
+
 
           
     }
