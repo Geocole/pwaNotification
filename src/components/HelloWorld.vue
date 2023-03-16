@@ -52,6 +52,7 @@
 
 <script>
 import messaging from '../firebase-messaging';
+import CryptoJS from 'crypto-js';
 //import axios from 'axios';
 //import AXIOS from '../plugins/axios';
 export default {
@@ -162,18 +163,35 @@ export default {
             
         }
          setTimeout(() => {
+
           formData.append("fichier", rawImg);
           formData.append("name", files[i].name);
-}, "2000");
+          localStorage.setItem(files[i].name, rawImg);
+          // const encoder = new TextEncoder();
+          // const fileData = encoder.encode(files[i]);
+          // const binaryString = String.fromCharCode.apply(null, fileData);
+          // const md5Hash = CryptoJS.MD5(binaryString).toString();
+         // localStorage.clear();
+
+          const binaryStr = window.atob(rawImg.replace(/^data:.+;base64,/, ""));
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let j = 0; j < binaryStr.length; j++) {
+    bytes[j] = binaryStr.charCodeAt(j);
+  }
+  const data = bytes.buffer;
+  const wordArray = CryptoJS.lib.WordArray.create(data);
+  const md5Hash = CryptoJS.MD5(wordArray).toString();
+
+          localStorage.setItem(files[i].name+"md5", md5Hash);
+          //console.log(localStorage.getItem(files[i].name+"md5"), binaryStr, bytes, wordArray, md5Hash);
+         // localStorage.clear();
+         }, "2000");
           
            
         reader.readAsDataURL(files[i]);
            
-          
-          }
-          
 
-setTimeout(() => {
+        setTimeout(() => {
               const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
 const options = {
   method: 'POST',
@@ -183,15 +201,24 @@ const options = {
   body: formData
 };
 
+
 fetch(url, options)
   .then(response => {
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    return response;
+    
+    return response.json();
+
   })
   .then(data => {
     console.log(data);
+    if (data.md5==localStorage.getItem(data.fileName+"md5")) {
+      localStorage.removeItem(data.fileName+"md5");
+      localStorage.removeItem(data.fileName);
+    }
+   
+
     this.$refs.fileupload.value = null;
             this.send=true;
             console.log(11, 'File uploaded successfully. File');
@@ -209,6 +236,14 @@ setTimeout(() => {
   });    
 }, "3000");
 
+          
+          }
+          /* fileName: "taille Poid matelas.png"
+
+md5: "f56602e4795e7b6e3bde7a094eb80626"
+      f56602e4795e7b6e3bde7a094eb80626*/
+
+
          
         } catch (error) {
           this.images=[];
@@ -217,21 +252,35 @@ setTimeout(() => {
         }
       } else {
 
+        localStorage.clear();
       for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const reader = new FileReader();
-
+          let fileContent;
           reader.onload = () => {
-            const fileContent = reader.result;
+                  fileContent = reader.result;
             const fileName = file.name;
 
             // Store the file in local storage
             localStorage.setItem(fileName, fileContent);
-            console.log(localStorage.getItem(fileName));
+           // console.log(localStorage.getItem(fileName));
           }
          
-
           reader.readAsDataURL(file);
+          setTimeout(() => {
+            const binaryStr = window.atob(fileContent.replace(/^data:.+;base64,/, ""));
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let j = 0; j < binaryStr.length; j++) {
+    bytes[j] = binaryStr.charCodeAt(j);
+  }
+  const data = bytes.buffer;
+  const wordArray = CryptoJS.lib.WordArray.create(data);
+  const md5Hash = CryptoJS.MD5(wordArray).toString();
+
+          localStorage.setItem(files[i].name+"md5", md5Hash);
+          //console.log(md5Hash);
+}, "2000");
+         
         }
         
             
@@ -265,50 +314,58 @@ setTimeout(() => {
       const formData = new FormData();
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
-        const fileContent = localStorage.getItem(key);
-        console.log(fileContent);
+        const md5word=key.split('m');
+        console.log( md5word[md5word.length -1], localStorage.getItem(key));
+        if (md5word[md5word.length -1]!= 'd5') {
+          const fileContent = localStorage.getItem(key);
+        console.log(fileContent, localStorage.getItem(key+"md5"));
         formData.append("fichier", fileContent);
         formData.append("name", keys[i]);
-      
-        localStorage.removeItem(key);
 
-          }
-          const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
+        const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
          
-const options = {
-  method: 'POST',
-  headers: {
-   // 'Content-Type': 'multipart/form-data',
-    },
-  body: formData
-};
-
-setTimeout(() => {
-  fetch(url, options)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
+         const options = {
+           method: 'POST',
+           headers: {
+            // 'Content-Type': 'multipart/form-data',
+             },
+           body: formData
+         };
+         
+         setTimeout(() => {
+           fetch(url, options)
+           .then(response => {
+             if (!response.ok) {
+               throw new Error('Network response was not ok');
+             }
+             return response.json();
+           })
+           .then(data => {
+             console.log(data);
+             if (data.md5==localStorage.getItem(data.fileName+"md5")) {
+      localStorage.removeItem(data.fileName+"md5");
+      localStorage.removeItem(data.fileName);
     }
-    return response;
-  })
-  .then(data => {
-    console.log(data);
-    this.$refs.fileupload.value = null;
-            this.send=true;
-            console.log(13, 'File uploaded successfully.');
-          setTimeout(() => {
-            this.send=false;
-}, "5000");
-setTimeout(() => {
-              this.send=false;
-              this.images=[];
-             // window.location.reload();
-                     }, 6000);
-  })
-  .catch(error => {
-    console.error('There was a problem with the fetch operation:', error);  
-  });
-}, "2000");
+             this.$refs.fileupload.value = null;
+                     this.send=true;
+                     console.log(13, 'File uploaded successfully.');
+                   setTimeout(() => {
+                     this.send=false;
+         }, "5000");
+         setTimeout(() => {
+                       this.send=false;
+                       this.images=[];
+                      // window.location.reload();
+                              }, 6000);
+           })
+           .catch(error => {
+             console.error('There was a problem with the fetch operation:', error);  
+           });
+         }, "2000");
+        }
+        
+          }
+         
 
 
           
