@@ -167,7 +167,7 @@ export default {
 
           formData.append("fichier", rawImg);
           formData.append("name", files[i].name);
-         // localStorage.setItem(files[i].name, rawImg);
+        localStorage.setItem(files[i].name, rawImg);
           // const encoder = new TextEncoder();
           // const fileData = encoder.encode(files[i]);
           // const binaryString = String.fromCharCode.apply(null, fileData);
@@ -179,11 +179,11 @@ export default {
   for (let j = 0; j < binaryStr.length; j++) {
     bytes[j] = binaryStr.charCodeAt(j);
   }
-  //const data = bytes.buffer;
-  //const wordArray = CryptoJS.lib.WordArray.create(data);
- // const md5Hash = CryptoJS.MD5(wordArray).toString();
+  const data = bytes.buffer;
+  const wordArray = CryptoJS.lib.WordArray.create(data);
+ const md5Hash = CryptoJS.MD5(wordArray).toString();
 
-          //localStorage.setItem(files[i].name+"md5", md5Hash);
+          localStorage.setItem(files[i].name+"md5", md5Hash);
           //console.log(localStorage.getItem(files[i].name+"md5"), binaryStr, bytes, wordArray, md5Hash);
          // localStorage.clear();
          }, "2000");
@@ -193,9 +193,13 @@ export default {
            
 
         setTimeout(() => {
-              const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
+          const controller = new AbortController()
+          const signal = controller.signal;
+
+          const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
 const options = {
   method: 'POST',
+  signal: signal,
   headers: {
     //'Content-Type': 'multipart/form-data',
     },
@@ -226,15 +230,22 @@ fetch(url, options)
           setTimeout(() => {
             this.send=false;
 }, "5000");
+
 setTimeout(() => {
               this.send=false;
               this.images=[];
              // window.location.reload();
                      }, 6000);
+                     return;
   })
   .catch(error => {
     console.error('There was a problem with the fetch operation:', error);  
-  });    
+  });  
+  setTimeout(() => {
+    controller.abort();
+    this.$refs.fileupload.value = null;
+    this.images=[];
+}, "20000");  
 }, "3000");
 
           
@@ -322,11 +333,13 @@ md5: "f56602e4795e7b6e3bde7a094eb80626"
         console.log(fileContent, localStorage.getItem(key+"md5"));
         formData.append("fichier", fileContent);
         formData.append("name", keys[i]);
-
+        const controller = new AbortController()
+          const signal = controller.signal;
         const url = 'https://pitrack-dev.pilote.immo/clients/scripts/upload/_ajax/upload.php';
          
          const options = {
            method: 'POST',
+           signal: signal,
            headers: {
             // 'Content-Type': 'multipart/form-data',
              },
@@ -358,10 +371,16 @@ md5: "f56602e4795e7b6e3bde7a094eb80626"
                        this.images=[];
                       // window.location.reload();
                               }, 6000);
+
+                              return;
            })
            .catch(error => {
              console.error('There was a problem with the fetch operation:', error);  
            });
+           setTimeout(() => {
+    controller.abort();
+   
+}, "20000"); 
          }, "2000");
         }
         
