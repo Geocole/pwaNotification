@@ -172,7 +172,7 @@ export default {
 
           formData.append("fichier", rawImg);
           formData.append("name", files[i].name);
-       // localStorage.setItem(files[i].name, rawImg);
+        localStorage.setItem(files[i].name, rawImg);
           // const encoder = new TextEncoder();
           // const fileData = encoder.encode(files[i]);
           // const binaryString = String.fromCharCode.apply(null, fileData);
@@ -184,11 +184,11 @@ export default {
   for (let j = 0; j < binaryStr.length; j++) {
     bytes[j] = binaryStr.charCodeAt(j);
   }
-//   const data = bytes.buffer;
-//   const wordArray = CryptoJS.lib.WordArray.create(data);
-//  const md5Hash = CryptoJS.MD5(wordArray).toString();
+  const data = bytes.buffer;
+  const wordArray = CryptoJS.lib.WordArray.create(data);
+ const md5Hash = CryptoJS.MD5(wordArray).toString();
 
-//           localStorage.setItem(files[i].name+"md5", md5Hash);
+          localStorage.setItem(files[i].name+"md5", md5Hash);
           //console.log(localStorage.getItem(files[i].name+"md5"), binaryStr, bytes, wordArray, md5Hash);
          // localStorage.clear();
          }, "2000");
