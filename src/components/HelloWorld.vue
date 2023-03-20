@@ -241,11 +241,11 @@ setTimeout(() => {
   .catch(error => {
     console.error('There was a problem with the fetch operation:', error);  
   });  
-  setTimeout(() => {
-    controller.abort();
-    this.$refs.fileupload.value = null;
-    this.images=[];
-}, "20000");  
+//   setTimeout(() => {
+//     controller.abort();
+//     this.$refs.fileupload.value = null;
+//     this.images=[];
+// }, "20000");  
 }, "3000");
 
           
@@ -260,7 +260,7 @@ md5: "f56602e4795e7b6e3bde7a094eb80626"
         } catch (error) {
           this.images=[];
           this.$refs.fileupload.value = null;
-          console.error(1, error.response);
+         // console.error(1, error.response);
         }
       } else {
 
@@ -374,13 +374,13 @@ md5: "f56602e4795e7b6e3bde7a094eb80626"
 
                               return;
            })
-           .catch(error => {
-             console.error('There was a problem with the fetch operation:', error);  
+           .catch(() => {
+             //console.error('There was a problem with the fetch operation:', error);  
            });
-           setTimeout(() => {
-    controller.abort();
+//            setTimeout(() => {
+//     controller.abort();
    
-}, "20000"); 
+// }, "20000"); 
          }, "2000");
         }
         
