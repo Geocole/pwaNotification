@@ -24,6 +24,10 @@
       <div v-if="send" class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
   <span class="font-medium">Success alert!</span> File uploaded successfully.
 </div>
+
+<div v-if="warning" class="p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-400" role="alert">
+  <span class="font-medium">Warning!</span> Your connection is slow. the file will be save to be upload when it will be better if upload not success
+</div>
 <label class="block my-5 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload file</label>   
 <input @change="uploadFiles" ref="fileupload" type="file" class="text-sm text-grey-500
             file:mr-5 file:py-3 file:px-10
@@ -67,7 +71,8 @@ export default {
       notificationDisabled: false,
       token:"",
       send:false,
-      images:[]
+      images:[],
+      warning:false
     }
   },
   mounted() {
@@ -167,7 +172,7 @@ export default {
 
           formData.append("fichier", rawImg);
           formData.append("name", files[i].name);
-        localStorage.setItem(files[i].name, rawImg);
+       // localStorage.setItem(files[i].name, rawImg);
           // const encoder = new TextEncoder();
           // const fileData = encoder.encode(files[i]);
           // const binaryString = String.fromCharCode.apply(null, fileData);
@@ -179,11 +184,11 @@ export default {
   for (let j = 0; j < binaryStr.length; j++) {
     bytes[j] = binaryStr.charCodeAt(j);
   }
-  const data = bytes.buffer;
-  const wordArray = CryptoJS.lib.WordArray.create(data);
- const md5Hash = CryptoJS.MD5(wordArray).toString();
+//   const data = bytes.buffer;
+//   const wordArray = CryptoJS.lib.WordArray.create(data);
+//  const md5Hash = CryptoJS.MD5(wordArray).toString();
 
-          localStorage.setItem(files[i].name+"md5", md5Hash);
+//           localStorage.setItem(files[i].name+"md5", md5Hash);
           //console.log(localStorage.getItem(files[i].name+"md5"), binaryStr, bytes, wordArray, md5Hash);
          // localStorage.clear();
          }, "2000");
@@ -240,13 +245,24 @@ setTimeout(() => {
   })
   .catch(() => {
     this.images=[];
+    this.warning=true;
+            console.log(14);
+          setTimeout(() => {
+            this.warning=false;
+}, "10000");
+  //   if (e instanceof TypeError) {
+  //   console.error(" ");
+  // } else if (e instanceof DOMException && e.name === "TimeoutError") {
+  //   console.error("Fetch request has timed out ");
+  // }
    // console.error('There was a problem with the fetch operation:', error);  
   });  
-//   setTimeout(() => {
+//  setTimeout(() => {
+    
 //     controller.abort();
 //     this.$refs.fileupload.value = null;
 //     this.images=[];
-// }, "20000");  
+//  }, "20000");  
 }, "3000");
 
           
@@ -376,6 +392,11 @@ md5: "f56602e4795e7b6e3bde7a094eb80626"
                               return;
            })
            .catch(() => {
+            this.warning=true;
+            console.log(14);
+          setTimeout(() => {
+            this.warning=false;
+}, "10000");
              //console.error('There was a problem with the fetch operation:', error);  
            });
 //            setTimeout(() => {
