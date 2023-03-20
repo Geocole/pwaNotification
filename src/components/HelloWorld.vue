@@ -108,7 +108,7 @@ export default {
   this.offline = !navigator.onLine;
       const connectionType = navigator.connection.effectiveType;
       
-       const isSlowConnection = connectionType === 'slow-2g' || connectionType === '2g';
+       const isSlowConnection = connectionType === 'slow-2g' || connectionType === '2g'|| connectionType === '3g';
       console.log(navigator, connectionType);
       if (!this.offline && !isSlowConnection) {
         this.syncFiles();
@@ -141,7 +141,8 @@ export default {
       if (navigator.connection) {
   // use navigator.connection
    connectionType = navigator.connection.effectiveType;
-        isSlowConnection = connectionType === 'slow-2g' || connectionType === '2g';
+   console.log(connectionType);
+        isSlowConnection = connectionType === 'slow-2g' || connectionType === '2g'|| connectionType === '3g';
         connexion=(!this.offline)&&(!isSlowConnection);
 
 } else {
@@ -166,7 +167,7 @@ export default {
 
           formData.append("fichier", rawImg);
           formData.append("name", files[i].name);
-          localStorage.setItem(files[i].name, rawImg);
+         // localStorage.setItem(files[i].name, rawImg);
           // const encoder = new TextEncoder();
           // const fileData = encoder.encode(files[i]);
           // const binaryString = String.fromCharCode.apply(null, fileData);
@@ -178,11 +179,11 @@ export default {
   for (let j = 0; j < binaryStr.length; j++) {
     bytes[j] = binaryStr.charCodeAt(j);
   }
-  const data = bytes.buffer;
-  const wordArray = CryptoJS.lib.WordArray.create(data);
-  const md5Hash = CryptoJS.MD5(wordArray).toString();
+  //const data = bytes.buffer;
+  //const wordArray = CryptoJS.lib.WordArray.create(data);
+ // const md5Hash = CryptoJS.MD5(wordArray).toString();
 
-          localStorage.setItem(files[i].name+"md5", md5Hash);
+          //localStorage.setItem(files[i].name+"md5", md5Hash);
           //console.log(localStorage.getItem(files[i].name+"md5"), binaryStr, bytes, wordArray, md5Hash);
          // localStorage.clear();
          }, "2000");
