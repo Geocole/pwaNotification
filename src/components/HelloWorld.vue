@@ -1,6 +1,6 @@
 <template>
   <div class="hello max-w-md">
-    <h1>{{ msg }} version 4</h1>
+    <h1>{{ msg }} version 5</h1>
     <button v-if="false" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
       @click="requestPermission"
     >
@@ -238,8 +238,9 @@ setTimeout(() => {
                      }, 6000);
                      return;
   })
-  .catch(error => {
-    console.error('There was a problem with the fetch operation:', error);  
+  .catch(() => {
+    this.images=[];
+   // console.error('There was a problem with the fetch operation:', error);  
   });  
 //   setTimeout(() => {
 //     controller.abort();
@@ -260,7 +261,7 @@ md5: "f56602e4795e7b6e3bde7a094eb80626"
         } catch (error) {
           this.images=[];
           this.$refs.fileupload.value = null;
-         // console.error(1, error.response);
+          console.error(1, error.response);
         }
       } else {
 
