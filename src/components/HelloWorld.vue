@@ -29,13 +29,14 @@
   <span class="font-medium">Warning!</span> Your connection is slow. the file will be save to be upload when it will be better if upload not success
 </div>
 <label class="block my-5 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload file</label>   
-<input @change="uploadFiles" ref="fileupload" type="file" class="text-sm text-grey-500
+<input  @change="uploadFiles" ref="fileupload" type="file" class="text-sm text-grey-500
             file:mr-5 file:py-3 file:px-10
             file:rounded-full file:border-0
             file:text-md file:font-semibold  file:text-white
             file:bg-gradient-to-r file:from-blue-600 file:to-amber-600
             hover:file:cursor-pointer hover:file:opacity-80
           " />
+          <button v-if="locstore"  @click="syncFiles"  class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">Try again </button>
 
           <div class="flex flex-wrap mt-4">
       <div v-for="(image, index) in images" :key="index" class="w-1/2 px-2 py-2">
@@ -72,7 +73,8 @@ export default {
       token:"",
       send:false,
       images:[],
-      warning:false
+      warning:false,
+      locstore:false
     }
   },
   mounted() {
@@ -107,9 +109,19 @@ export default {
       });
     },
 
+   async checkConnectionSpeed() {
+   // localStorage.clear();
+
+
+},
     checkConnection() {
+    //  console.log(navigator.userAgent, 134, window.performance);
+
+      this.checkConnectionSpeed();
+
       if (navigator.connection) {
   // use navigator.connection
+  
   this.offline = !navigator.onLine;
       const connectionType = navigator.connection.effectiveType;
       
@@ -132,14 +144,21 @@ export default {
         console.log('is not connected');
       }
 }
+    this.notload()
      
     },
 
     clearArray() {
       this.$set(this, 'images', []);
     },
-
-    async uploadFiles(event) {
+    notload(){
+      const keys = Object.keys(localStorage);
+      if(keys.length != 0){
+        this.locstore=true
+      }else{this.locstore=false}
+    },
+///////////////////////////
+ async uploadFiles(event) {
       let connectionType ='';
       let isSlowConnection=false;
       let connexion = false;
@@ -232,6 +251,7 @@ fetch(url, options)
     this.$refs.fileupload.value = null;
             this.send=true;
             console.log(11, 'File uploaded successfully. File');
+            localStorage.clear();
           setTimeout(() => {
             this.send=false;
 }, "5000");
@@ -241,14 +261,18 @@ setTimeout(() => {
               this.images=[];
              // window.location.reload();
                      }, 6000);
+                     this.notload();
                      return;
   })
   .catch(() => {
+   
+
     this.images=[];
     this.warning=true;
             console.log(14);
           setTimeout(() => {
             this.warning=false;
+            this.notload();
 }, "10000");
   //   if (e instanceof TypeError) {
   //   console.error(" ");
@@ -307,13 +331,13 @@ md5: "f56602e4795e7b6e3bde7a094eb80626"
   const md5Hash = CryptoJS.MD5(wordArray).toString();
 
           localStorage.setItem(files[i].name+"md5", md5Hash);
-          //console.log(md5Hash);
+          console.log(md5Hash);
+          //7800be43549fdf04169c2a9a4b47e4b7 poid matelas
 }, "2000");
-         
         }
         
             
-            console.log(12, 'File uploaded successfully. File');
+            console.log(12, 'File successfully save on loacale storage.');
           setTimeout(() => {
             
             this.images=[];
@@ -344,10 +368,11 @@ md5: "f56602e4795e7b6e3bde7a094eb80626"
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
         const md5word=key.split('m');
-        console.log( md5word[md5word.length -1], localStorage.getItem(key));
+       // console.log( md5word[md5word.length -1], localStorage.getItem(key));
         if (md5word[md5word.length -1]!= 'd5') {
+          console.log( this.$refs.fileupload.value);
           const fileContent = localStorage.getItem(key);
-        console.log(fileContent, localStorage.getItem(key+"md5"));
+       // console.log(fileContent, localStorage.getItem(key+"md5"));
         formData.append("fichier", fileContent);
         formData.append("name", keys[i]);
         const controller = new AbortController()
@@ -372,31 +397,38 @@ md5: "f56602e4795e7b6e3bde7a094eb80626"
              return response.json();
            })
            .then(data => {
-             console.log(data);
+            console.log(data);
              if (data.md5==localStorage.getItem(data.fileName+"md5")) {
+             // console.log(8000);
       localStorage.removeItem(data.fileName+"md5");
       localStorage.removeItem(data.fileName);
+      localStorage.clear();
     }
-             this.$refs.fileupload.value = null;
+    
+            
                      this.send=true;
                      console.log(13, 'File uploaded successfully.');
+                    
                    setTimeout(() => {
                      this.send=false;
          }, "5000");
          setTimeout(() => {
                        this.send=false;
                        this.images=[];
+                       this.$refs.fileupload.value = null;
                       // window.location.reload();
                               }, 6000);
-
+                             
+                              this.notload();
                               return;
            })
-           .catch(() => {
+           .catch((error) => {
             this.warning=true;
-            console.log(14);
+            console.log(14, error);
           setTimeout(() => {
             this.warning=false;
 }, "10000");
+this.notload();
              //console.error('There was a problem with the fetch operation:', error);  
            });
 //            setTimeout(() => {
